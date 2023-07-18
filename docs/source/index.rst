@@ -35,46 +35,43 @@ Suggested Citation:
 
 Whalen, A, Ros-Freixedes, R, Wilson, DL, Gorjanc, G, Hickey, JM. (2018). *Hybrid peeling for fast and accurate calling, phasing, and imputation with sequence data of any coverage in pedigrees*. Genetics Selection Evolution; doi: https://doi.org/10.1186/s12711-018-0438-2
 
-
 Disclaimer
 ----------
 
 While every effort has been made to ensure that |ap| does what it claims to do, there is absolutely no guarantee that the results provided are correct. Use of |ap| is entirely at your own risk.
 
-
 Program Options
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~
 
 |ap| takes in a number of command line arguments to control the program's behavior. To view a list of arguments, run |ap| without any command line arguments, i.e. ``AlphaPeel`` or ``AlphaPeel -h``. 
 
-
 Core Arguments 
 --------------
-
 ::
   
   Core arguments
-    -out prefix              The output file prefix.
+    -out prefix             The output file prefix.
 
 The ``-out`` argument gives the output file prefix for where the outputs of |ap| should be stored. By default, |ap| outputs a file with imputed genotypes, ``prefix.genotypes``, phased haplotypes ``prefix.phase``, and genotype dosages ``prefix.dosages``. For more information on which files are created, see "Output Arguments", below.
 
 Input Arguments 
-----------------
-
+---------------
 ::
 
     Input Options:
       -bfile [BFILE [BFILE ...]]
-                          File(s) in plink (binary) format. Only stable on
-                          Linux).
-      -genotypes [GENOTYPES [GENOTYPES ...]]
-                          File(s) in AlphaGenes format.
-      -seqfile [SEQFILE [SEQFILE ...]]
-                          Sequence data file(s).
+                            [Plink (binary) file(s)](#Plink-binary-file).
+                            [Only stable on Linux and not well tested!]
       -pedigree [PEDIGREE [PEDIGREE ...]]
-                          Pedigree file(s) in AlphaGenes format.
+                            [Pedigree file(s)](#Pedigree-file).
+      -genotypes [GENOTYPES [GENOTYPES ...]]
+                            [Genotype file(s)](#Genotype-file).
+      -seqfile [SEQFILE [SEQFILE ...]]
+                            [Sequence file(s)](#Sequence-file).
+      -phenotypes [PHENOTYPE [PHENOTYPE ...]]
+                            [Phenotype file(s)](#Phenotype-file).
       -startsnp STARTSNP    The first marker to consider. The first marker in the
-                          file is marker "1".
+                            file is marker "1".
       -stopsnp STOPSNP      The last marker to consider.
 
 |ap| requires a pedigree file and one or more genotype files to run the analysis.
@@ -126,9 +123,8 @@ The order in which individuals are output can be changed by using the ``writekey
 
 The parameter ``-iothreads`` controls the number of threads/processes used by |ap|. |ap| uses additional threads to parse and format input and output files. Setting this option to a value greater than 1 is only recommended for very large files (i.e. >10,000 individuals).
 
-
-Peeling arguments: 
-------------------------
+Peeling arguments 
+-----------------
 ::
 
     Mandatory peeling arguments:
@@ -160,36 +156,50 @@ Peeling arguments:
 
 For hybrid peeling, where a large amount (millions of segregating sites) of sequence data needs to be imputed, first run the program in multi-locus mode to generate a segregation file, and then run the program in single-locus mode with a known segregation file.
 
-
 The ``-error``, ``-seqerror`` and ``-length`` arguments control some of the parameters used in the model. |ap| is robust to deviations in genotyping error rate and sequencing error rate so it is not recommended to use these options unless large deviations from the default are known. Changing the ``-length`` argument to match the genetic map length can increase accuracy in some situations.
 
 The ``-esterrors`` option estimated the genotyping error rate based on observed information, this option is generally not necessary and can increase runtime. ``-estmaf`` estimates the minor allele frequency after each peeling cycle. This option can be useful if there are a large number of non-genotyped founders. 
 
-
-
 Hybrid peeling arguments 
------------------------------
+------------------------
 ::
 
     Single locus arguments:
-      -mapfile MAPFILE      A map file (chr marker_name position) for genotype data.
+      -mapfile MAPFILE      [Map file for genotype data](#Map-file).
       -segmapfile SEGMAPFILE
-                            a map file for the segregation estimates for hybrid
-                            peeling.
-      -segfile SEGFILE      A segregation file for hybrid peeling.
+                            [Map file for the segregation estimates for hybrid peeling](#Map-file).
+      -segfile SEGFILE      [Segregation file for hybrid peeling](#Segregation file).
 
 In order to run hybrid peeling the user needs to supply a ``-mapfile`` which gives the genetic positions for the SNPs in the sequence data supplied, a ``-segmapfile`` which gives the genetic position for the SNPs in the segregation file, and a ``-segfile`` which gives the segregation values generated via multi-locus iterative peeling. These arguments are not required for running in multi-locus mode. 
-
 
 Input file formats
 ~~~~~~~~~~~~~~~~~~
 
+Binary plink file
+-----------------
+
+|ap| supports the use of binary plink files using the package ``AlphaPlinkPython``. |ap| will use the pedigree supplied by the ``.fam`` file if a pedigree file is not supplied. Otherwise the pedigree file will be used and the ``.fam`` file will be ignored. 
+
+Pedigree file
+-------------
+
+Each line of a pedigree file has three values, the individual's id, their father's id, and their mother's id. "0" represents an unknown id.
+
+Example:
+::
+
+  id1 0 0
+  id2 0 0
+  id3 id1 id2
+  id4 id1 id2
+
 Genotype file 
 -------------
 
-Genotype files contain the input genotypes for each individual. The first value in each line is the individual's id. The remaining values are the genotypes of the individual at each locus, either 0, 1, or 2 (or 9 if missing). The following examples gives the genotypes for four individuals genotyped on four markers each.
+Genotype file contain the input (observed) genotypes for each individual. The first value in each line is the individual's id. The remaining values are the genotypes of the individual at each locus, either 0, 1, or 2 (or 9 if missing). The following examples gives the genotypes for four individuals genotyped on four markers each.
 
-Example: ::
+Example:
+::
 
   id1 0 2 9 0 
   id2 1 1 1 1 
@@ -199,12 +209,13 @@ Example: ::
 Sequence file
 -------------
 
-The sequence data file is in a similar Sequence data is given in a similar format to the genotype data. For each individual there are two lines. The first line gives the individual's id and the read counts for the reference allele. The second line gives the individual's id and the read counts for the alternative allele.
+The sequence file is in a similar format to the genotype data. For each individual there are two lines. The first line gives the individual's id and the read counts for the reference allele. The second line gives the individual's id and the read counts for the alternative allele.
 
-Example: ::
+Example:
+::
 
-  id1 4 0 0 7 # Reference allele for id1
-  id1 0 3 0 0 # Alternative allele for id2
+  id1 4 0 0 7 # Reference allele count for id1
+  id1 0 3 0 0 # Alternative allele count for id2
   id2 1 3 4 3
   id2 1 1 6 2
   id3 0 3 0 1
@@ -212,46 +223,40 @@ Example: ::
   id4 2 0 6 7
   id4 0 7 7 0
 
-Pedigree file
--------------
+Phenotype file
+--------------
 
-Each line of a pedigree file has three values, the individual's id, their father's id, and their mother's id. "0" represents an unknown id.
+The phenotype file contains the input phenotypes for some individuals. The first value in each line is the individual's id. The remaining value(s) are the phenotypes of the individual at each locus TODO - depending on penetrance function. The following examples gives phenotype for two individuals - one is affected (1) and another is not (0).
 
-Example: ::
+Example:
+::
 
-  id1 0 0
-  id2 0 0
-  id3 id1 id2
-  id4 id1 id2
-
-Binary plink file
------------------
-
-|ap| supports the use of binary plink files using the package ``AlphaPlinkPython``. |ap| will use the pedigree supplied by the ``.fam`` file if a pedigree file is not supplied. Otherwise the pedigree file will be used and the ``.fam`` file will be ignored. 
-
+  id1 1
+  id3 0
 
 Map file 
------------------
+--------
 
 The map file gives the chromosome number and the marker name and the base pair position for each marker in two columns. |ap| needs to be run with all of the markers on the same chromosome. 
 
-Example: ::
+Example:
+::
 
   1 snp_a 12483939
   1 snp_b 192152913
   1 snp_c 65429279
   1 snp_d 107421759
 
-
 Output file formats
 ~~~~~~~~~~~~~~~~~~~
 
 Phase file
------------
+----------
 
 The phase file gives the phased haplotypes (either 0 or 1) for each individual in two lines. For individuals where we can determine the haplotype of origin, the first line will provide information on the paternal haplotype, and the second line will provide information on the maternal haplotype.
 
-Example: ::
+Example:
+::
 
   id1 0 1 9 0 # Paternal haplotype
   id1 0 1 9 0 # Maternal haplotype
@@ -263,11 +268,12 @@ Example: ::
   id4 0 1 1 0
 
 Genotype probability file
----------------------------
+-------------------------
 
 The haplotype file (*.haps*) provides the (phased) allele probabilities for each locus. There are four lines per individual containing the allele probability for the (aa, aA, Aa, AA) alleles where the paternal allele is listed first, and where *a* is the reference (or major) allele and *A* is the alternative (or minor) allele. 
 
-Example: ::
+Example:
+::
 
   id1    0.9998    0.0001    0.0001    1.0000
   id1    0.0000    0.4999    0.4999    0.0000
@@ -287,11 +293,12 @@ Example: ::
   id4    0.0000    0.0000    1.0000    0.0000
 
 Dosage file
--------------
+-----------
 
 The dosage file gives the expected allele dosage for the alternative (or minor) allele for each individual. The first value in each line is the individual ID. The remaining values are the allele dosages at each loci. These values will be between 0 and 2.
 
-Example: ::
+Example:
+::
 
   1    0.0003    1.0000    1.0000    0.0001
   2    1.0000    0.0000    1.0000    0.0000
@@ -309,7 +316,8 @@ The segregation file gives the joint probability of each pattern of inheritance.
   3. the grand **maternal** allele from the father and the grand **paternal** allele from the mother
   4. the grand **maternal** allele from the father and the grand **maternal** allele from the mother
 
-Example: ::
+Example:
+::
 
   id1    1.0000    0.9288    0.9583    0.9834
   id1    0.0000    0.0149    0.0000    0.0000
@@ -340,6 +348,5 @@ Example ``.maf`` file for four loci:
   0.195520
   0.733061
   0.145847
-
 
 .. |ap| replace:: AlphaPeel
